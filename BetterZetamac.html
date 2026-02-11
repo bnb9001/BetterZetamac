@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Better Zetamac</title>
+    <style>
+        body {
+            font-family: Helvetica, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 60px;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            margin: 40px 0;
+        }
+
+        #problem {
+            font-size: 4em;
+            margin: 80px 0;
+            font-weight: normal;
+        }
+
+        #answer {
+            font-size: 2em;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Better Zetamac</h1>
+    <!-- Start Screen-->
+    <div id = "start-screen">
+        <h2>For now, this only runs the 2 minute mode</h2>
+        <button onclick = "startGame()">Start Game</button>
+    </div>
+
+    <!-- Game Screen-->
+    <div id = "game-screen" style="display: none;">
+        <p>Time: <span id = "timer">120</span></p>
+        <p>Score: <span id ="score">0</span></p>
+        <h2 id = "problem"></h2>
+        <input type = "text" id = "answer" oninput = "checkAnswer()" autocomplete = "off">
+    </div>
+
+    <!-- End Screen-->
+    <div id = "end-screen" style="display: none;">
+        <p>Score: <span id = "final-score">0</span></p>
+        <p>High Score: <span id = "high-score">0</span></p>
+        <button onclick = "reset()">Try Again</button>
+    </div>
+
+    <script>
+        let timeRemaining = 120;
+        let timerInterval = 0;
+        let currentAnswer = 0;
+        let score = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+
+        function startGame() {
+            timeRemaining = 120;
+            score = 0;
+            clearInterval(timerInterval);
+            document.getElementById('timer').textContent = timeRemaining;
+            document.getElementById('score').textContent = score;
+            document.getElementById('answer').value = '';
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('end-screen').style.display = 'none';
+
+            timerInterval = setInterval(updateTimer, 1000);
+
+            generateProblem();
+
+            document.getElementById('answer').focus();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+            }
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('high-score').textContent = highScore;
+
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'block';
+        }
+
+        function reset() {
+            clearInterval(timerInterval);
+            document.getElementById('start-screen').style.display = 'block';
+            document.getElementById('end-screen').style.display = 'none';
+        }
+
+        function updateTimer() {
+            timeRemaining--;
+            document.getElementById('timer').textContent = timeRemaining;
+            if(timeRemaining <= 0) {
+                endGame();
+            }
+        }
+
+        function generateProblem() {
+            const operation = Math.floor(Math.random() *4);
+            let operand1, operand2, problemText;
+            if(operation == 0) {
+                operand1 = Math.floor(Math.random() * 99) + 2;
+                operand2 = Math.floor(Math.random() * 99) + 2;
+                currentAnswer = operand1 + operand2;
+                problemText = operand1 + " + " + operand2;
+            }
+            else if(operation == 1) {
+                operand1 = Math.floor(Math.random() * 99) + 2;
+                operand2 = Math.floor(Math.random() * (operand1 - 1)) + 2;
+                currentAnswer = operand1 - operand2;
+                problemText = operand1 + " - " + operand2;
+            }
+            else if(operation == 2) {
+                const alpha = Math.floor(Math.random() * 99) + 2;
+                const beta = Math.floor(Math.random() * 11) + 2;
+                operand1 = alpha;
+                operand2 = beta;
+                if(Math.random() > 0.5) {
+                    operand1 = beta;
+                    operand2 = alpha;
+                }
+                currentAnswer = operand1*operand2;
+                problemText = operand1 + " * " + operand2;
+            }
+            else if(operation == 3) {
+                const alpha = Math.floor(Math.random() * 99) + 2;
+                const beta = Math.floor(Math.random() * 11) + 2;
+                const product = alpha*beta;
+                operand1 = product;
+                operand2 = beta;
+                currentAnswer = alpha;
+                problemText = operand1 + " / " + operand2;
+            }
+
+            document.getElementById('problem').textContent = problemText;
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answer').value);
+            if(isNaN(userAnswer)) {
+                return;
+            }
+            if(userAnswer == currentAnswer) {
+                score++;
+                document.getElementById('score').textContent = score;
+                document.getElementById('answer').value = '';
+                generateProblem();
+            }
+        }
+
+        document.addEventListener('keypress', function(event) {
+            if(event.key === 'q' || event.key === 'Q') {
+                event.preventDefault();
+                document.getElementById('game-screen').style.display = 'none';
+                reset();
+            }
+            if(event.key === 'r' || event.key === 'R') {
+                event.preventDefault();
+                if(document.getElementById('game-screen').style.display === 'block')
+                {
+                    startGame();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
